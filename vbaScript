@@ -1,0 +1,79 @@
+Dim row As Integer
+Dim col As Integer
+Dim arr() As String
+Private Sub CommandButton1_Click()
+col = Cells.CurrentRegion.Columns.Count
+row = Cells.CurrentRegion.Rows.Count
+ReDim arr(row, col)
+For i = 1 To row
+For j = 1 To col
+arr(i - 1, j - 1) = Cells(i, j)
+Next j
+Next i
+ProgressBar1.Value = 0
+ProgressBar1.Visible = True
+createPdfAndSendMail
+End Sub
+Public Sub createPdfAndSendMail()
+Dim objWord As Object
+Dim name As String
+Dim mf As String
+Dim email As String
+Dim path As String
+Dim val As Integer
+Dim OutApp As Object
+Dim OutMail As Object
+val = 100 / row
+Const wdReplaceAll = 2
+For i = 2 To row
+Set objWord = CreateObject("Word.Application")
+objWord.Visible = False
+Set objDoc = objWord.Documents.Open("C:\Joydeep\E\Academic Initiative\0 Master the MF Contest\RM Project - Certificate\MtM Certificate Generator.docx")
+Set objSelection = objWord.Selection
+Set OutApp = CreateObject("Outlook.Application")
+Set OutMail = OutApp.CreateItem(0)
+On Error Resume Next
+For j = 1 To col
+objSelection.Find.Text = "<<" + arr(0, j - 1) + ">>"
+objSelection.Find.Forward = True
+objSelection.Find.MatchWholeWord = True
+objSelection.Find.Replacement.Text = arr(i - 1, j - 1)
+objSelection.Find.Execute , , , , , , , , , , wdReplaceAll
+If arr(0, j - 1) = "Name" Then
+name = arr(i - 1, j - 1)
+End If
+If arr(0, j - 1) = "MF ID" Then
+mf = arr(i - 1, j - 1)
+End If
+If arr(0, j - 1) = "Email Id" Then
+email = arr(i - 1, j - 1)
+End If
+Next j
+path = "C:\Joydeep\E\Academic Initiative\0 Master the MF Contest\RM Project - Certificate\" + name + " - " + mf + ".pdf"
+objDoc.SaveAs2 path, 17
+objWord.Quit SaveChanges:=wdDoNotSaveChanges
+Set objWord = Nothing
+ProgressBar1.Value = ProgressBar1.Value + val
+On Error Resume Next
+With OutMail
+.To = email
+.Subject = "IBM"
+.Body = "This is to certify that you have cleared " + mf + "Mainframe event"
+.Attachments.Add path
+.Send
+End With
+On Error GoTo 0
+Set OutMail = Nothing
+Set OutApp = Nothing
+Next i
+ProgressBar1.Value = 100
+MsgBox ("PDFs Created andd Mails Send")
+ProgressBar1.Visible = False
+End Sub
+Private Sub UserForm_onLoad()
+ProgressBar1.Visible = False
+End Sub
+
+Private Sub UserForm_Click()
+
+End Sub
